@@ -1,0 +1,552 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Knight Moves Lab</title>
+
+<style>
+body{
+    margin:0;
+    font-family:Arial, sans-serif;
+    height:100vh;
+    overflow:hidden;
+    display:flex;
+    flex-direction:column;
+}
+
+#topBar{
+    padding:10px 16px;
+    background:#222;
+    color:white;
+    font-size:14px;
+}
+
+#main{
+    flex:1;
+    display:flex;
+    overflow:hidden;
+}
+
+#valuesPanel{
+    width:140px;
+    padding:14px;
+    background:#f2f2f2;
+    border-right:1px solid #ccc;
+}
+
+#boardWrap{
+    width:430px;
+    background:#222;
+    display:flex;
+    align-items:flex-start;
+    justify-content:center;
+    padding-top:12px;
+}
+
+#board{
+    display:grid;
+    grid-template-columns:repeat(8,48px);
+    grid-template-rows:repeat(8,48px);
+    gap:1px;
+    background:#222;
+    padding:8px;
+}
+
+.cell{
+    border:1px solid #555;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    font-size:16px;
+    font-weight:bold;
+    cursor:pointer;
+    user-select:none;
+}
+
+.border{
+    background:#d7ecff;
+}
+
+.inner{
+    background:#f5f5f5;
+}
+
+.selected{
+    outline:4px solid red;
+    z-index:100;
+}
+
+#panel{
+    flex:1;
+    padding:20px;
+    overflow:auto;
+}
+
+input,select,button{
+    width:100%;
+    margin-top:6px;
+    margin-bottom:12px;
+    padding:8px;
+    box-sizing:border-box;
+}
+
+textarea{
+    width:100%;
+    height:80px;
+}
+
+.small{
+    font-size:13px;
+    color:#333;
+}
+
+.valueBox{
+    margin-bottom:14px;
+}
+
+#calcResult{
+    font-size:20px;
+    font-weight:bold;
+    margin-top:10px;
+}
+.reachable{
+    box-shadow:0 0 0 4px #00e5ff inset;
+}
+
+.path{
+    box-shadow:0 0 0 4px #00ff66 inset;
+}
+
+.pathCurrent{
+    outline:4px solid #ff00ff;
+}
+</style>
+</head>
+
+<body>
+
+<div id="topBar">
+<b>Knight Moves</b> —
+Elegir enteros positivos distintos J, S y C. 
+Puntaje inicial = J. 
+Si el salto cambia de letra: multiplicar por el valor destino. 
+Si conserva letra: sumar valor destino. 
+Objetivo: 2024.
+</div>
+
+<div id="main">
+
+<div id="valuesPanel">
+<h3>Valores</h3>
+
+<div class="valueBox">
+<label>J</label>
+<input id="valJ" type="number" value="1">
+</div>
+
+<div class="valueBox">
+<label>S</label>
+<input id="valS" type="number" value="2">
+</div>
+
+<div class="valueBox">
+<label>C</label>
+<input id="valC" type="number" value="3">
+</div>
+
+<div class="small">
+Estos valores son globales para las letras del tablero.
+</div>
+</div>
+
+<div id="boardWrap">
+<div id="board"></div>
+</div>
+
+<div id="panel">
+<h2>Registro</h2>
+<div id="scoreInfo">Score: -</div>
+<h2>Casilla</h2>
+<button id="startPathBtn">Empezar registro desde esta casilla</button>
+<button id="stopPathBtn">Parar registro</button>
+<button id="clearPathBtn">Limpiar camino</button>
+
+<div id="pathInfo">
+Camino: -
+</div>
+
+<div id="pathValues">
+Valores: -
+</div>
+
+<div id="coords">
+Nada seleccionado
+</div>
+
+<label>Contenido</label>
+<input id="valueInput">
+
+<button id="saveBtn">
+Guardar Casilla
+</button>
+
+<h2>Calculadora</h2>
+
+<input id="calcA" placeholder="Valor A">
+
+<select id="calcOp">
+    <option value="+">+</option>
+    <option value="-">-</option>
+    <option value="*">*</option>
+    <option value="/">/</option>
+</select>
+
+<input id="calcB" placeholder="Valor B">
+
+<button id="calcBtn">Calcular</button>
+
+<div id="calcResult"></div>
+
+<h2>Exportar</h2>
+<button id="exportBtn">Exportar JSON</button>
+<textarea id="output"></textarea>
+
+</div>
+
+</div>
+
+<script>
+
+const initialBoard = [
+["","","","","","","",""],
+["","J","S","S","C","C","C",""],
+["","J","S","S","C","C","C",""],
+["","J","J","S","S","C","C",""],
+["","J","J","S","S","C","C",""],
+["","J","J","J","S","S","C",""],
+["","J","J","J","S","S","C",""],
+["","","","","","","",""]
+];
+
+const colors = {
+    J: { bg:"#7c4dff", fg:"white" },
+    S: { bg:"#ff3b4d", fg:"white" },
+    C: { bg:"#f5c242", fg:"white" }
+};
+
+const board=document.getElementById("board");
+
+
+
+let selected=null;
+let recording=false;
+let currentCellData=null;
+let path=[];
+
+const state=[];
+const cellRefs=[];
+
+function getLetterValue(letter){
+    if(letter==="J") return Number(document.getElementById("valJ").value);
+    if(letter==="S") return Number(document.getElementById("valS").value);
+    if(letter==="C") return Number(document.getElementById("valC").value);
+    return "";
+}
+
+function paintCell(cell, value){
+    if(colors[value]){
+        cell.style.background = colors[value].bg;
+        cell.style.color = colors[value].fg;
+    }else{
+        cell.style.background = "";
+        cell.style.color = "";
+    }
+}
+
+function clearReachable(){
+    document
+        .querySelectorAll(".reachable")
+        .forEach(x=>x.classList.remove("reachable"));
+}
+
+function clearCurrent(){
+    document
+        .querySelectorAll(".pathCurrent")
+        .forEach(x=>x.classList.remove("pathCurrent"));
+}
+
+function isKnightDistance(a,b){
+    const dr=Math.abs(a.row-b.row);
+    const dc=Math.abs(a.col-b.col);
+    return dr*dr + dc*dc === 5;
+}
+
+function showReachableFrom(data){
+    clearReachable();
+
+    for(let r=0;r<8;r++){
+        for(let c=0;c<8;c++){
+            const target=state[r][c];
+
+            if(target===data) continue;
+
+            const alreadyUsed=path.some(p=>p.row===target.row && p.col===target.col);
+
+            if(!alreadyUsed && isKnightDistance(data,target)){
+                cellRefs[r][c].classList.add("reachable");
+            }
+        }
+    }
+}
+
+function coordName(data){
+    const letters="ABCDEFGH";
+    return letters[data.col] + (8-data.row);
+}
+
+function updatePathInfo(){
+    if(path.length===0){
+        document.getElementById("pathInfo").innerText="Camino: -";
+        document.getElementById("pathValues").innerText="Valores: -";
+        return;
+    }
+
+    document.getElementById("pathInfo").innerText =
+        "Camino: " + path.map(coordName).join(" → ");
+
+    document.getElementById("pathValues").innerText =
+        "Valores: " + path.map(p=>p.value || "-").join(" → ");
+}
+
+function addToPath(data,cell){
+    path.push(data);
+
+    cell.classList.add("path");
+
+    clearCurrent();
+    cell.classList.add("pathCurrent");
+
+    currentCellData=data;
+
+    showReachableFrom(data);
+    updatePathInfo();
+}
+
+for(let r=0;r<8;r++){
+
+    state[r]=[];
+    cellRefs[r]=[];
+
+    for(let c=0;c<8;c++){
+
+        const cell=document.createElement("div");
+        cell.classList.add("cell");
+
+        if(r===0 || r===7 || c===0 || c===7){
+            cell.classList.add("border");
+        }else{
+            cell.classList.add("inner");
+        }
+
+        const data={
+            row:r,
+            col:c,
+            value:initialBoard[r][c],
+            color:""
+        };
+
+        state[r][c]=data;
+        cellRefs[r][c]=cell;
+
+        cell.innerText=data.value;
+        paintCell(cell,data.value);
+
+        cell.onclick=()=>{
+
+            document
+                .querySelectorAll(".cell")
+                .forEach(x=>x.classList.remove("selected"));
+
+            cell.classList.add("selected");
+
+            selected={ cell, data };
+
+            document.getElementById("coords").innerHTML =
+                `Fila: ${r+1}<br>Columna: ${c+1}<br>Letra: ${data.value || "-"}`;
+
+            document.getElementById("valueInput").value = data.value;
+
+            const v = getLetterValue(data.value);
+
+            if(v !== ""){
+                document.getElementById("calcA").value = v;
+            }
+
+            if(recording){
+
+                if(path.length===0){
+                    addToPath(data,cell);
+                    return;
+                }
+
+                const alreadyUsed=path.some(p=>p.row===data.row && p.col===data.col);
+
+                if(alreadyUsed) return;
+
+                if(isKnightDistance(currentCellData,data)){
+                    addToPath(data,cell);
+                }
+            }
+        };
+
+        board.appendChild(cell);
+    }
+}
+
+document.getElementById("startPathBtn").onclick=()=>{
+
+    recording=true;
+    path=[];
+
+    document
+        .querySelectorAll(".path")
+        .forEach(x=>x.classList.remove("path"));
+
+    clearCurrent();
+
+    if(selected){
+        addToPath(selected.data,selected.cell);
+    }
+
+    updatePathInfo();
+};
+
+document.getElementById("stopPathBtn").onclick=()=>{
+    recording=false;
+    clearReachable();
+    showScore();
+};
+document.getElementById("clearPathBtn").onclick=()=>{
+    recording=false;
+    path=[];
+
+    document
+        .querySelectorAll(".path")
+        .forEach(x=>x.classList.remove("path"));
+
+    clearCurrent();
+    clearReachable();
+    updatePathInfo();
+
+    document.getElementById("scoreInfo").innerText="Score: -";
+};
+
+document.getElementById("saveBtn").onclick=()=>{
+
+    if(!selected) return;
+
+    const value =
+        document.getElementById("valueInput").value.trim().toUpperCase();
+
+    selected.data.value=value;
+    selected.cell.innerText=value;
+
+    paintCell(selected.cell,value);
+};
+
+document.getElementById("exportBtn").onclick=()=>{
+
+    document.getElementById("output").value =
+        JSON.stringify({
+            values:{
+                J:document.getElementById("valJ").value,
+                S:document.getElementById("valS").value,
+                C:document.getElementById("valC").value
+            },
+            path:path.map(p=>({
+                row:p.row,
+                col:p.col,
+                coord:coordName(p),
+                value:p.value
+            })),
+            board:state
+        },null,2);
+};
+
+document.getElementById("calcBtn").onclick = () => {
+
+    const a = parseFloat(document.getElementById("calcA").value);
+    const b = parseFloat(document.getElementById("calcB").value);
+    const op = document.getElementById("calcOp").value;
+
+    let result;
+
+    if(Number.isNaN(a) || Number.isNaN(b)){
+        result = "Falta un valor";
+    }else{
+        switch(op){
+            case "+": result = a + b; break;
+            case "-": result = a - b; break;
+            case "*": result = a * b; break;
+            case "/": result = b !== 0 ? a / b : "∞"; break;
+        }
+    }
+
+    document.getElementById("calcResult").innerText =
+        "Resultado: " + result;
+};
+function getValues(){
+    return {
+        J:Number(document.getElementById("valJ").value),
+        S:Number(document.getElementById("valS").value),
+        C:Number(document.getElementById("valC").value)
+    };
+}
+
+function calculatePathScore(){
+    if(path.length===0) return null;
+
+    const values=getValues();
+
+    let score=values[path[0].value];
+    let steps=[];
+
+    steps.push(`${path[0].value} = ${score}`);
+
+    for(let i=1;i<path.length;i++){
+
+        const prev=path[i-1].value;
+        const curr=path[i].value;
+        const v=values[curr];
+
+        if(prev!==curr){
+            steps.push(`${score} × ${curr}(${v})`);
+            score=score*v;
+        }else{
+            steps.push(`${score} + ${curr}(${v})`);
+            score=score+v;
+        }
+    }
+
+    return {
+        score,
+        formula:steps.join(" → ")
+    };
+}
+
+function showScore(){
+    const result=calculatePathScore();
+
+    if(!result){
+        document.getElementById("scoreInfo").innerText="Score: -";
+        return;
+    }
+
+    document.getElementById("scoreInfo").innerText =
+        `Score: ${result.score}\n${result.formula}`;
+}
+</script>
+
+</body>
+</html>
