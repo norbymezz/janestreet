@@ -1,16 +1,156 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-<meta charset="UTF-8" />
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Caballo / Piso Blanco-Negro</title>
 <style>
-body{margin:0;font-family:system-ui,sans-serif;background:#202020;color:#eee}.app{display:grid;grid-template-rows:auto 1fr;height:100vh}.header-panel{display:flex;gap:20px;padding:12px 16px;border-bottom:1px solid #444;align-items:flex-start;overflow-x:auto}.header-section{flex-shrink:0;display:flex;flex-direction:column;gap:8px}.header-section h4{margin:0;font-size:12px;color:#999}.header-section-content{display:flex;gap:8px;align-items:center}.piece-small{font-size:18px;width:28px;height:28px;display:flex;justify-content:center;align-items:center;border:1px solid #666}.rotation-buttons{display:flex;gap:4px}.rotation-buttons button{padding:4px 8px;font-size:12px;width:auto}.radius-controls{display:grid;grid-template-columns:repeat(3,max-content);gap:4px 10px;font-size:11px;line-height:1.2}.radius-controls label{white-space:nowrap;color:#ddd}.radius-controls input{width:auto;margin:0 4px 0 0;vertical-align:middle}.radiusTarget{box-shadow:inset 0 0 0 2px #a855f7}.content-area{display:grid;grid-template-columns:1fr 100px 100px;gap:1px;background:#444;overflow:hidden}.board-container{display:flex;justify-content:center;align-items:center;overflow:auto;background:#202020}.board{display:grid;grid-template-columns:repeat(100,20px);grid-template-rows:repeat(100,20px);border:3px solid #aaa}.cell{display:flex;justify-content:center;align-items:center;font-size:calc(var(--cell-size,20px)*.6);cursor:pointer;user-select:none;position:relative}.white{background:#e8e8e8;color:#111}.black{background:#444;color:#fff}.selected{outline:4px solid yellow;z-index:2}.knightTarget{box-shadow:inset 0 0 0 2px #ff5f5f}.coord{position:absolute;bottom:3px;right:5px;font-size:10px;opacity:.55}.side-panel{padding:12px;box-sizing:border-box;background:#202020;overflow-y:auto;font-size:12px}.side-panel h3{margin:0 0 8px;font-size:12px;color:#999}.side-panel label{display:block;margin-top:8px;font-size:11px}input,textarea{width:100%;box-sizing:border-box;margin:4px 0 8px;padding:4px;background:#111;color:#eee;border:1px solid #555;font-size:11px}input[type=range]{padding:0}#zoomValue{text-align:center;font-size:11px;margin-bottom:8px}textarea{height:60px}button{padding:6px;background:#111;color:#eee;border:1px solid #666;cursor:pointer;font-size:12px}button:hover{background:#333}
+:root{color-scheme:dark}
+*{box-sizing:border-box}
+body{margin:0;font-family:system-ui,sans-serif;background:#202020;color:#eee}
+.app{display:grid;grid-template-rows:auto 1fr;height:100vh}
+.header-panel{display:flex;gap:20px;padding:12px 16px;border-bottom:1px solid #444;align-items:flex-start;overflow-x:auto}
+.header-section{flex-shrink:0;display:flex;flex-direction:column;gap:8px}
+.header-section h4{margin:0;font-size:12px;color:#999}
+.header-section-content{display:flex;gap:8px;align-items:center}
+.piece-small{font-size:18px;width:28px;height:28px;display:flex;justify-content:center;align-items:center;border:1px solid #666}
+.rotation-buttons{display:flex;gap:4px}.rotation-buttons button{padding:4px 8px;font-size:12px;width:auto}
+.radius-controls{display:grid;grid-template-columns:repeat(3,max-content);gap:4px 10px;font-size:11px;line-height:1.2}
+.radius-controls label{white-space:nowrap;color:#ddd}.radius-controls input{width:auto;margin:0 4px 0 0;vertical-align:middle}
+.content-area{display:grid;grid-template-columns:1fr 155px 155px;gap:1px;background:#444;overflow:hidden}
+.board-container{display:flex;justify-content:center;align-items:center;overflow:auto;background:#202020}
+.board{display:grid;border:3px solid #aaa}
+.cell{display:flex;justify-content:center;align-items:center;cursor:pointer;user-select:none;position:relative;font-weight:700}
+.white{background:#e8e8e8;color:#111}.black{background:#444;color:#fff}
+.selected{outline:4px solid yellow;z-index:4}.knightTarget{box-shadow:inset 0 0 0 2px #ff5f5f}.radiusTarget{box-shadow:inset 0 0 0 2px #a855f7}
+.pointA{outline:4px solid #ff4747;z-index:5}.pointB{outline:4px solid #38bdf8;z-index:5}.pointC{outline:4px solid #4ade80;z-index:5}
+.counted{background:#f59e0b!important;color:#111!important;box-shadow:inset 0 0 0 2px #fff!important}
+.count-number{font-size:clamp(9px,1.3vw,17px);font-weight:800;line-height:1}
+.point-tag{position:absolute;top:2px;left:2px;font-size:9px;line-height:1;background:#111;color:#fff;padding:2px 3px;border-radius:2px;z-index:6}
+.coord{position:absolute;bottom:2px;right:3px;font-size:8px;opacity:.55;font-weight:400}
+.side-panel{padding:12px;background:#202020;overflow-y:auto;font-size:12px}.side-panel h3{margin:0 0 8px;font-size:12px;color:#999}.side-panel label{display:block;margin-top:8px;font-size:11px}
+input,select,textarea{width:100%;margin:4px 0 8px;padding:5px;background:#111;color:#eee;border:1px solid #555;font-size:11px}input[type=range]{padding:0}input[type=checkbox]{width:auto;margin-right:5px}
+textarea{height:60px}button{padding:6px;background:#111;color:#eee;border:1px solid #666;cursor:pointer;font-size:12px}button:hover{background:#333}.wide{width:100%;margin:4px 0}
+#zoomValue{text-align:center;font-size:11px;margin-bottom:8px}.status{min-height:42px;padding:7px;margin:8px 0;background:#151515;border:1px solid #444;font-size:10px;line-height:1.35}
+details{margin:8px 0;border:1px solid #555;background:#171717}summary{cursor:pointer;padding:7px;font-weight:700;font-size:11px}.help{padding:0 9px 9px;color:#ccc;font-size:10px;line-height:1.45}.help p{margin:5px 0}.legend-line{display:flex;gap:5px;align-items:center;margin:3px 0}.dot{width:9px;height:9px;border-radius:50%;display:inline-block}.red{background:#ff4747}.blue{background:#38bdf8}.green{background:#4ade80}
+@media(max-width:850px){.content-area{grid-template-columns:1fr 140px}.content-area aside:last-child{display:none}.radius-controls{grid-template-columns:repeat(2,max-content)}}
 </style>
 </head>
 <body>
-<div class="app"><div class="header-panel"><div class="header-section"><h4>PIEZAS</h4><div class="header-section-content"><div class="piece-small">♘</div><div class="piece-small">♞</div></div></div><div class="header-section radios-section"><h4>RADIOS</h4><div id="radiusControls" class="radius-controls"><label><input type="checkbox" data-radius="1" checked> √1 / 1 — (1,0)</label><label><input type="checkbox" data-radius="2" checked> √2 — (1,1)</label><label><input type="checkbox" data-radius="4"> 2 — (2,0)</label><label><input type="checkbox" data-radius="5" checked> √5 — (2,1)</label><label><input type="checkbox" data-radius="8"> √8 — (2,2)</label><label><input type="checkbox" data-radius="9"> 3 — (3,0)</label><label><input type="checkbox" data-radius="10"> √10 — (3,1)</label><label><input type="checkbox" data-radius="13"> √13 — (3,2)</label><label><input type="checkbox" data-radius="18"> √18 — (3,3)</label><label><input type="checkbox" data-radius="16"> 4 — (4,0)</label><label><input type="checkbox" data-radius="17"> √17 — (4,1)</label><label><input type="checkbox" data-radius="20"> √20 — (4,2)</label></div></div><div class="header-section"><h4>VISTA</h4><div class="header-section-content rotation-buttons"><button id="rotBtn-90">-90°</button><button id="rotBtn0">0°</button><button id="rotBtn90">90°</button><button id="rotBtn180">180°</button></div></div></div><div class="content-area"><div class="board-container"><div id="board" class="board"></div></div><aside class="side-panel"><h3>CONTROLES</h3><label>Zoom (%)</label><input id="zoomInput" type="range" min="10" max="200" value="100"><div id="zoomValue">100%</div><label>Filas</label><input id="rowsInput" type="number" min="1" max="200" value="8"><label>Columnas</label><input id="colsInput" type="number" min="1" max="200" value="8"><label>Decimales</label><input id="decimalsInput" type="number" min="0" max="6" value="0"></aside><aside class="side-panel"><h3>DATOS</h3><label>Fila</label><input id="rowBox" readonly><label>Columna</label><input id="colBox" readonly><label>Piso</label><input id="floorBox" readonly><label>Radio</label><input value="múltiples" readonly style="font-size:10px"><label>Regla</label><input value="según radio" readonly style="font-size:10px"><label>Notas</label><textarea id="notesBox">Seleccioná radios para ver todas las casillas a esa distancia euclídea.</textarea></aside></div></div>
+<div class="app">
+  <div class="header-panel">
+    <div class="header-section"><h4>PIEZAS</h4><div class="header-section-content"><div class="piece-small">♘</div><div class="piece-small">♞</div></div></div>
+    <div class="header-section"><h4>RADIOS</h4><div id="radiusControls" class="radius-controls">
+      <label><input type="checkbox" data-radius="1" checked>√1 / 1 — (1,0)</label><label><input type="checkbox" data-radius="2" checked>√2 — (1,1)</label><label><input type="checkbox" data-radius="4">2 — (2,0)</label><label><input type="checkbox" data-radius="5" checked>√5 — (2,1)</label><label><input type="checkbox" data-radius="8">√8 — (2,2)</label><label><input type="checkbox" data-radius="9">3 — (3,0)</label><label><input type="checkbox" data-radius="10">√10 — (3,1)</label><label><input type="checkbox" data-radius="13">√13 — (3,2)</label><label><input type="checkbox" data-radius="18">√18 — (3,3)</label><label><input type="checkbox" data-radius="16">4 — (4,0)</label><label><input type="checkbox" data-radius="17">√17 — (4,1)</label><label><input type="checkbox" data-radius="20">√20 — (4,2)</label>
+    </div></div>
+    <div class="header-section"><h4>VISTA</h4><div class="header-section-content rotation-buttons"><button id="rotBtn-90">-90°</button><button id="rotBtn0">0°</button><button id="rotBtn90">90°</button><button id="rotBtn180">180°</button></div></div>
+  </div>
+
+  <div class="content-area">
+    <div class="board-container"><div id="board" class="board"></div></div>
+
+    <aside class="side-panel">
+      <h3>CONTROLES</h3>
+      <label>Zoom (%)</label><input id="zoomInput" type="range" min="10" max="200" value="100"><div id="zoomValue">100%</div>
+      <label>Filas</label><input id="rowsInput" type="number" min="1" max="200" value="8">
+      <label>Columnas</label><input id="colsInput" type="number" min="1" max="200" value="8">
+
+      <h3>TRES PUNTOS</h3>
+      <label><input id="threePointMode" type="checkbox">Activar selección A–B–C</label>
+      <label>Número inicial</label><input id="startNumber" type="number" value="1" step="1">
+      <label>Si C no está alineado</label>
+      <select id="stopMode"><option value="rowcol">Detener por fila o columna de C</option><option value="projection">Detener en la proyección más cercana</option></select>
+      <button id="clearPoints" class="wide">Limpiar A–B–C</button>
+      <div id="pointStatus" class="status">Modo desactivado.</div>
+
+      <details>
+        <summary>¿Cómo funciona?</summary>
+        <div class="help">
+          <p>Activá el modo y elegí tres casillas en orden: <b>A</b>, <b>B</b> y <b>C</b>.</p>
+          <div class="legend-line"><span class="dot red"></span>A: origen</div>
+          <div class="legend-line"><span class="dot blue"></span>B: fija la dirección</div>
+          <div class="legend-line"><span class="dot green"></span>C: fija el inicio o el límite</div>
+          <p>A y B deben compartir fila, columna o diagonal.</p>
+          <p>Si A, B y C están alineados, se rellena el tramo A–B contando desde el número indicado.</p>
+          <p>Si C no está alineado, la línea A→B continúa hasta uno de dos límites seleccionables:</p>
+          <p><b>Fila o columna:</b> se detiene en la primera casilla que coincide con la fila o la columna de C.</p>
+          <p><b>Proyección:</b> se detiene en la casilla de la línea A–B que queda más cerca de C.</p>
+        </div>
+      </details>
+    </aside>
+
+    <aside class="side-panel">
+      <h3>DATOS</h3>
+      <label>Fila</label><input id="rowBox" readonly>
+      <label>Columna</label><input id="colBox" readonly>
+      <label>Piso</label><input id="floorBox" readonly>
+      <label>Radio</label><input value="múltiples" readonly>
+      <label>Notas</label><textarea id="notesBox">Seleccioná radios o activá el modo de tres puntos.</textarea>
+    </aside>
+  </div>
+</div>
+
 <script>
-const boardEl=document.getElementById('board'),rowBox=document.getElementById('rowBox'),colBox=document.getElementById('colBox'),floorBox=document.getElementById('floorBox'),zoomInput=document.getElementById('zoomInput'),zoomValue=document.getElementById('zoomValue'),rowsInput=document.getElementById('rowsInput'),colsInput=document.getElementById('colsInput');let selected=null,rotation=0,rows=8,cols=8,baseSize=20,zoom=100;const cells=[];
-function initializeCells(){for(let r=0;r<rows;r++){if(!cells[r])cells[r]=[];for(let c=0;c<cols;c++)cells[r][c]={row:r,col:c,el:null}}}function floorName(r,c){return(r+c)%2===0?'blanco':'negro'}function updateCellSize(){const size=Math.max(4,Math.round(baseSize*zoom/100));boardEl.style.gridTemplateColumns=`repeat(${cols},${size}px)`;boardEl.style.gridTemplateRows=`repeat(${rows},${size}px)`}function renderBoard(){boardEl.innerHTML='';let order=[];for(let r=0;r<rows;r++)for(let c=0;c<cols;c++){let mr=r,mc=c;if(rotation===90){mr=c;mc=rows-1-r}else if(rotation===180){mr=rows-1-r;mc=cols-1-c}else if(rotation===270){mr=cols-1-c;mc=r}order.push([mr,mc])}for(const[r,c]of order){const cell=cells[r][c]||{row:r,col:c,el:null},el=document.createElement('div');el.className='cell '+(floorName(r,c)==='blanco'?'white':'black');const coord=document.createElement('div');coord.className='coord';coord.textContent=`${r},${c}`;el.appendChild(coord);el.addEventListener('click',()=>selectCell(r,c));cell.el=el;cells[r][c]=cell;boardEl.appendChild(el)}updateRadiusView()}function selectCell(r,c){selected=cells[r][c];rowBox.value=r;colBox.value=c;floorBox.value=floorName(r,c);updateRadiusView()}function activeRadiusSquares(){return[...document.querySelectorAll('#radiusControls input:checked')].map(x=>Number(x.dataset.radius))}function offsetsForRadius(n){const o=[],m=Math.ceil(Math.sqrt(n));for(let dr=-m;dr<=m;dr++)for(let dc=-m;dc<=m;dc++)if((dr||dc)&&dr*dr+dc*dc===n)o.push([dr,dc]);return o}function updateRadiusView(){for(let r=0;r<rows;r++)for(let c=0;c<cols;c++){const el=cells[r][c].el;if(!el)continue;el.classList.remove('selected','knightTarget','radiusTarget');el.innerHTML='';const coord=document.createElement('div');coord.className='coord';coord.textContent=`${r},${c}`;el.appendChild(coord)}if(!selected)return;const sr=selected.row,sc=selected.col;selected.el.classList.add('selected');selected.el.insertAdjacentHTML('afterbegin','♘');activeRadiusSquares().forEach(n=>offsetsForRadius(n).forEach(([dr,dc])=>{const r=sr+dr,c=sc+dc;if(r<0||r>=rows||c<0||c>=cols)return;const target=cells[r][c].el;target.classList.add(n===5?'knightTarget':'radiusTarget');target.insertAdjacentHTML('beforeend',`<div style="font-size:8px;color:#fff;font-weight:bold;position:absolute;top:2px;left:2px;background:rgba(0,0,0,.55);padding:1px 2px;border-radius:2px;">${n===1?'√1':`√${n}`}</div>`)}))}
-zoomInput.addEventListener('input',e=>{zoom=+e.target.value;zoomValue.textContent=zoom+'%';updateCellSize();renderBoard()});rowsInput.addEventListener('change',e=>{rows=+e.target.value||8;selected=null;initializeCells();updateCellSize();renderBoard()});colsInput.addEventListener('change',e=>{cols=+e.target.value||8;selected=null;initializeCells();updateCellSize();renderBoard()});[['rotBtn-90',270],['rotBtn0',0],['rotBtn90',90],['rotBtn180',180]].forEach(([id,v])=>document.getElementById(id).addEventListener('click',()=>{rotation=v;renderBoard()}));document.querySelectorAll('#radiusControls input').forEach(x=>x.addEventListener('change',updateRadiusView));initializeCells();updateCellSize();renderBoard();
-</script></body></html>
+const boardEl=document.getElementById('board');
+const rowBox=document.getElementById('rowBox');
+const colBox=document.getElementById('colBox');
+const floorBox=document.getElementById('floorBox');
+const zoomInput=document.getElementById('zoomInput');
+const zoomValue=document.getElementById('zoomValue');
+const rowsInput=document.getElementById('rowsInput');
+const colsInput=document.getElementById('colsInput');
+const threePointMode=document.getElementById('threePointMode');
+const startNumber=document.getElementById('startNumber');
+const stopMode=document.getElementById('stopMode');
+const pointStatus=document.getElementById('pointStatus');
+
+let selected=null,rotation=0,rows=8,cols=8,baseSize=20,zoom=100;
+let points=[];
+const cells=[];
+
+function initializeCells(){cells.length=0;for(let r=0;r<rows;r++){cells[r]=[];for(let c=0;c<cols;c++)cells[r][c]={row:r,col:c,el:null}}}
+function floorName(r,c){return(r+c)%2===0?'blanco':'negro'}
+function sign(n){return n===0?0:(n>0?1:-1)}
+function updateCellSize(){const size=Math.max(4,Math.round(baseSize*zoom/100));boardEl.style.gridTemplateColumns=`repeat(${cols},${size}px)`;boardEl.style.gridTemplateRows=`repeat(${rows},${size}px)`;boardEl.style.setProperty('--cell-size',size+'px')}
+function inBounds(r,c){return r>=0&&r<rows&&c>=0&&c<cols}
+
+function displayOrder(){const order=[];for(let r=0;r<rows;r++)for(let c=0;c<cols;c++){let mr=r,mc=c;if(rotation===90&&rows===cols){mr=c;mc=rows-1-r}else if(rotation===180){mr=rows-1-r;mc=cols-1-c}else if(rotation===270&&rows===cols){mr=cols-1-c;mc=r}order.push([mr,mc])}return order}
+
+function renderBoard(){boardEl.innerHTML='';for(const[r,c]of displayOrder()){const cell=cells[r][c],el=document.createElement('div');el.className='cell '+(floorName(r,c)==='blanco'?'white':'black');el.addEventListener('click',()=>selectCell(r,c));cell.el=el;boardEl.appendChild(el)}renderAll()}
+
+function baseCellContent(r,c){const el=cells[r][c].el;el.className='cell '+(floorName(r,c)==='blanco'?'white':'black');el.innerHTML=`<span class="coord">${r},${c}</span>`}
+function activeRadiusSquares(){return[...document.querySelectorAll('#radiusControls input:checked')].map(x=>Number(x.dataset.radius))}
+function offsetsForRadius(n){const out=[],m=Math.ceil(Math.sqrt(n));for(let dr=-m;dr<=m;dr++)for(let dc=-m;dc<=m;dc++)if((dr||dc)&&dr*dr+dc*dc===n)out.push([dr,dc]);return out}
+
+function renderAll(){for(let r=0;r<rows;r++)for(let c=0;c<cols;c++)baseCellContent(r,c);if(selected&&!threePointMode.checked)renderRadii();renderPointsAndCount()}
+function renderRadii(){const sr=selected.row,sc=selected.col;selected.el.classList.add('selected');selected.el.insertAdjacentHTML('afterbegin','♘');for(const n of activeRadiusSquares())for(const[dr,dc]of offsetsForRadius(n)){const r=sr+dr,c=sc+dc;if(!inBounds(r,c))continue;const el=cells[r][c].el;el.classList.add(n===5?'knightTarget':'radiusTarget');el.insertAdjacentHTML('beforeend',`<span class="point-tag">${n===1?'√1':'√'+n}</span>`)}}
+
+function aligned(a,b){const dr=b.row-a.row,dc=b.col-a.col;return dr===0||dc===0||Math.abs(dr)===Math.abs(dc)}
+function sameInfiniteLine(a,b,c){if(!aligned(a,b))return false;const dr=b.row-a.row,dc=b.col-a.col;return (c.row-a.row)*dc===(c.col-a.col)*dr}
+function direction(a,b){return{dr:sign(b.row-a.row),dc:sign(b.col-a.col)}}
+function lineAcrossBoard(a,b){const {dr,dc}=direction(a,b);let r=a.row,c=a.col;while(inBounds(r-dr,c-dc)){r-=dr;c-=dc}const line=[];while(inBounds(r,c)){line.push({row:r,col:c});r+=dr;c+=dc}return line}
+function segment(a,b){const {dr,dc}=direction(a,b),out=[];let r=a.row,c=a.col;out.push({row:r,col:c});while(r!==b.row||c!==b.col){r+=dr;c+=dc;out.push({row:r,col:c})}return out}
+function endpointByRowCol(a,b,c){const {dr,dc}=direction(a,b);let r=a.row,c0=a.col,last={row:r,col:c0};while(inBounds(r,c0)){last={row:r,col:c0};if((r===c.row||c0===c.col)&&(r!==a.row||c0!==a.col))return last;r+=dr;c0+=dc}return last}
+function endpointByProjection(a,b,c){const line=lineAcrossBoard(a,b);let best=line[0],bestD=Infinity;for(const p of line){const d=(p.row-c.row)**2+(p.col-c.col)**2;if(d<bestD){bestD=d;best=p}}return best}
+function countPath(){if(points.length<3||!aligned(points[0],points[1]))return[];const[a,b,c]=points;let path;if(sameInfiniteLine(a,b,c)){path=segment(a,b)}else{const end=stopMode.value==='projection'?endpointByProjection(a,b,c):endpointByRowCol(a,b,c);path=segment(a,end)}const initial=Number(startNumber.value)||0;return path.map((p,i)=>({...p,value:initial+i}))}
+
+function renderPointsAndCount(){const classes=['pointA','pointB','pointC'],tags=['A','B','C'];points.forEach((p,i)=>{const el=cells[p.row][p.col].el;el.classList.add(classes[i]);el.insertAdjacentHTML('afterbegin',`<span class="point-tag">${tags[i]}</span>`)});for(const p of countPath()){const el=cells[p.row][p.col].el;el.classList.add('counted');el.insertAdjacentHTML('afterbegin',`<span class="count-number">${p.value}</span>`)}}
+
+function updatePointStatus(){if(!threePointMode.checked){pointStatus.textContent='Modo desactivado.';return}if(points.length===0){pointStatus.textContent='Elegí A.';return}if(points.length===1){pointStatus.textContent=`A = (${points[0].row}, ${points[0].col}). Elegí B.`;return}if(!aligned(points[0],points[1])){pointStatus.textContent='A y B no están en la misma fila, columna o diagonal. Elegí B otra vez.';return}if(points.length===2){pointStatus.textContent='Dirección válida. Elegí C.';return}const[a,b,c]=points;pointStatus.textContent=sameInfiniteLine(a,b,c)?'A, B y C están alineados: se cuenta en el tramo A–B.':'C no está alineado: se extendió A→B según el criterio seleccionado.'}
+
+function selectCell(r,c){selected=cells[r][c];rowBox.value=r;colBox.value=c;floorBox.value=floorName(r,c);if(threePointMode.checked){if(points.length>=3)points=[];if(points.length===1&&!aligned(points[0],{row:r,col:c})){points[1]={row:r,col:c};updatePointStatus();renderAll();return}points.push({row:r,col:c});updatePointStatus()}renderAll()}
+function clearPoints(){points=[];updatePointStatus();renderAll()}
+
+zoomInput.addEventListener('input',e=>{zoom=+e.target.value;zoomValue.textContent=zoom+'%';updateCellSize();renderBoard()});
+rowsInput.addEventListener('change',e=>{rows=+e.target.value||8;selected=null;points=[];initializeCells();updateCellSize();renderBoard();updatePointStatus()});
+colsInput.addEventListener('change',e=>{cols=+e.target.value||8;selected=null;points=[];initializeCells();updateCellSize();renderBoard();updatePointStatus()});
+threePointMode.addEventListener('change',()=>{points=[];updatePointStatus();renderAll()});
+startNumber.addEventListener('input',renderAll);stopMode.addEventListener('change',renderAll);
+document.getElementById('clearPoints').addEventListener('click',clearPoints);
+document.querySelectorAll('#radiusControls input').forEach(x=>x.addEventListener('change',renderAll));
+[['rotBtn-90',270],['rotBtn0',0],['rotBtn90',90],['rotBtn180',180]].forEach(([id,v])=>document.getElementById(id).addEventListener('click',()=>{rotation=v;renderBoard()}));
+
+initializeCells();updateCellSize();renderBoard();updatePointStatus();
+</script>
+</body>
+</html>
